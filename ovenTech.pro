@@ -75,6 +75,8 @@ FORMS += \
     olap/axiswidget.ui \
     olap/cubewidget.ui
 
+LIBS     += -lqwt-qt5
+
 RESOURCES += \
     res.qrc
 
