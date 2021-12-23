@@ -14,7 +14,6 @@ public slots:
     bool select();
 private:
     QDate dBeg, dEnd;
-    DbRelation *relProgs;
 };
 
 #endif // MODELPROC_H

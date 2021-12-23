@@ -22,8 +22,6 @@ private slots:
 
 private:
     Ui::DialogProg *ui;
-    DbRelation *relProvol;
-    DbRelation *relDiam;
     DbMapper *mapper;
     DbTableModel *modelProg;
     DbTableModel *modelCont;

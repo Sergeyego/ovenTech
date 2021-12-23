@@ -7,16 +7,10 @@ DialogProg::DialogProg(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    relProvol = new DbRelation("select id, nam from provol order by id",0,1,this);
-    relDiam = new DbRelation("select id, sdim from diam order by diam",0,1,this);
-
     modelProg = new DbTableModel("techprogs",this);
     modelProg->addColumn("id","ID",true,TYPE_INT);
-    modelProg->addColumn("id_prov","Проволока",false,TYPE_STRING,NULL,relProvol);
-    modelProg->addColumn("id_diam","Диам.",false,TYPE_STRING,NULL,relDiam);
     modelProg->addColumn("nam","Название",false,TYPE_STRING);
-    modelProg->setSuffix("left join provol on provol.id=techprogs.id_prov left join diam on diam.id=techprogs.id_diam");
-    modelProg->setSort("provol.nam, diam.diam, techprogs.nam");
+    modelProg->setSort("techprogs.id");
     modelProg->select();
 
     modelCont = new DbTableModel("techprogsdata",this);
@@ -33,16 +27,12 @@ DialogProg::DialogProg(QWidget *parent) :
     ui->tableViewCont->setColumnWidth(3,120);
 
     ui->tableViewProg->setModel(modelProg);
-    ui->tableViewProg->setColumnWidth(0,40);
-    ui->tableViewProg->setColumnWidth(1,100);
-    ui->tableViewProg->setColumnWidth(2,50);
-    ui->tableViewProg->setColumnWidth(3,120);
+    ui->tableViewProg->setColumnWidth(0,50);
+    ui->tableViewProg->setColumnWidth(1,170);
 
     mapper = new DbMapper(ui->tableViewProg,this);
     ui->verticalLayoutCont->addWidget(mapper);
-    mapper->addMapping(ui->lineEditName,3);
-    mapper->addMapping(ui->comboBoxProv,1);
-    mapper->addMapping(ui->comboBoxDiam,2);
+    mapper->addMapping(ui->lineEditName,1);
     mapper->addEmptyLock(ui->tableViewCont);
 
     connect(mapper,SIGNAL(currentIndexChanged(int)),this,SLOT(updCont(int)));

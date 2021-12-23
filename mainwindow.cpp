@@ -32,7 +32,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tableViewProc->setColumnHidden(0,true);
     ui->tableViewProc->setColumnWidth(1,115);
     ui->tableViewProc->setColumnWidth(2,25);
-    ui->tableViewProc->setColumnWidth(3,200);
+    ui->tableViewProc->setColumnWidth(3,170);
     ui->tableViewProc->setColumnWidth(4,45);
     ui->tableViewProc->setColumnWidth(5,45);
 
@@ -82,7 +82,6 @@ void MainWindow::edtProg()
 {
     DialogProg d;
     d.exec();
-    modelProc->relation(3)->model()->refresh();
 }
 
 void MainWindow::updCont(QModelIndex index)
@@ -133,21 +132,16 @@ void MainWindow::cubeObj()
 {
     QStringList axes;
     axes.push_back(tr("Стенд"));
-    axes.push_back(tr("Марка"));
-    axes.push_back(tr("Диаметр"));
     axes.push_back(tr("Название программы"));
     axes.push_back(tr("Год"));
     axes.push_back(tr("Месяц"));
     axes.push_back(tr("День"));
-    QString query("select t.stend, pr.nam, d.diam,  p.nam, "
+    QString query("select t.stend, t.nam_prog, "
                   "substr(cast(to_timestamp(t.tm) as char(32)),1,4) as yr, "
                   "substr(cast(to_timestamp(t.tm) as char(32)),1,7) as mn, "
                   "substr(cast(to_timestamp(t.tm) as char(32)),1,10) as dy, "
                   "1 "
                   "from techproc as t "
-                  "inner join techprogs as p on t.id_prg=p.id "
-                  "inner join provol as pr on p.id_prov=pr.id "
-                  "inner join diam as d on p.id_diam=d.id "
                   "where date_trunc('day',to_timestamp(t.tm)) between :d1 and :d2");
     CubeWidget *kvoCube = new CubeWidget(("Количество отжигов"),axes,query,0);
     kvoCube->show();
@@ -158,13 +152,11 @@ void MainWindow::cubeEnerg()
 {
     QStringList axes;
     axes.push_back(tr("Стенд"));
-    axes.push_back(tr("Марка"));
-    axes.push_back(tr("Диаметр"));
     axes.push_back(tr("Название программы"));
     axes.push_back(tr("Год"));
     axes.push_back(tr("Месяц"));
     axes.push_back(tr("День"));
-    QString query("select t.stend, pr.nam, d.diam,  p.nam, "
+    QString query("select t.stend, t.nam_prog, "
                   "substr(cast(to_timestamp(t.tm) as char(32)),1,4) as yr, "
                   "substr(cast(to_timestamp(t.tm) as char(32)),1,7) as mn, "
                   "substr(cast(to_timestamp(t.tm) as char(32)),1,10) as dy, "
@@ -173,9 +165,6 @@ void MainWindow::cubeEnerg()
                   "(select \"TM\" from \"DBAVl_archVal_data_CQA\" where \"TM\"=( select max(\"TM\") from \"DBAVl_archVal_data_CQA\" where date_trunc('day',to_timestamp(\"TM\"))<= :d2 )))) - "
                   "(select \"VAL\" from \"DBAVl_archVal_data_CQA\" where \"TM\"=(select max(\"TM\") from \"DBAVl_archVal_data_CQA\" where \"TM\"<=t.tm)) "
                   "from techproc as t "
-                  "inner join techprogs as p on t.id_prg=p.id "
-                  "inner join provol as pr on p.id_prov=pr.id "
-                  "inner join diam as d on p.id_diam=d.id "
                   "where date_trunc('day',to_timestamp(t.tm)) between :d1 and :d2");
     CubeWidget *energCube = new CubeWidget(("Расход энергии, кВт*ч"),axes,query,0);
     energCube->show();
