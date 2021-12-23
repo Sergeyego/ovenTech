@@ -77,6 +77,8 @@ FORMS += \
 
 LIBS     += -lqwt-qt5
 
+#INCLUDEPATH += /usr/include/qwt-qt5
+
 RESOURCES += \
     res.qrc
 

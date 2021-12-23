@@ -137,11 +137,42 @@ struct XlsxPageSetup{
     bool fitToPage;
 };
 
+struct XlsxPageMargins{
+    XlsxPageMargins(
+    double left=0.590277777777778,
+    double right=0.590277777777778,
+    double top=0.590277777777778,
+    double bottom=0.590277777777778,
+    double header=0.511805555555555,
+    double footer=0.511805555555555) :
+        left(left),
+        right(right),
+        top(top),
+        bottom(bottom),
+        header(header),
+        footer(footer){
+    }
+
+    double left;
+    double right;
+    double top;
+    double bottom;
+    double header;
+    double footer;
+};
+
+
 enum XlsxPanePos {
     XLSX_PANE_BOTTOM_LEFT,
     XLSX_PANE_BOTTOM_RIGHT,
     XLSX_PANE_TOP_LEFT,
     XLSX_PANE_TOP_RIGHT
+};
+
+enum XlsxHeaderFooterType {
+    HeaderFooterOdd,
+    HeaderFooterEven,
+    HeaderFooterFirst
 };
 
 class Q_XLSX_EXPORT Worksheet : public AbstractSheet
@@ -160,8 +191,8 @@ public:
     bool writeInlineString(int row, int column, const QString &value, const Format &format=Format());
     bool writeNumeric(const CellReference &row_column, double value, const Format &format=Format());
     bool writeNumeric(int row, int column, double value, const Format &format=Format());
-    bool writeFormula(const CellReference &row_column, const CellFormula &formula, const Format &format=Format(), double result=0);
-    bool writeFormula(int row, int column, const CellFormula &formula, const Format &format=Format(), double result=0);
+    bool writeFormula(const CellReference &row_column, const CellFormula &formula, const Format &format=Format(), QVariant result=QVariant());
+    bool writeFormula(int row, int column, const CellFormula &formula, const Format &format=Format(), QVariant result=QVariant());
     bool writeBlank(const CellReference &row_column, const Format &format=Format());
     bool writeBlank(int row, int column, const Format &format=Format());
     bool writeBool(const CellReference &row_column, bool value, const Format &format=Format());
@@ -238,6 +269,12 @@ public:
     void setWhiteSpaceVisible(bool visible);
     XlsxPageSetup pageSetup() const;
     void setPageSetup(const XlsxPageSetup &setup);
+    void setHeaderData(const QString &data, XlsxHeaderFooterType type=HeaderFooterOdd);
+    void setFooterData(const QString &data, XlsxHeaderFooterType type=HeaderFooterOdd);
+    QString headerData(XlsxHeaderFooterType type=HeaderFooterOdd);
+    QString footerData(XlsxHeaderFooterType type=HeaderFooterOdd);
+    void setPageMargins(const XlsxPageMargins &pageMargins);
+    XlsxPageMargins pageMargins();
 
     bool freezePane(int row, int column, XlsxPanePos activePane = XLSX_PANE_BOTTOM_RIGHT);
     bool freezePane(int row, int column, int topRow, int leftCol, XlsxPanePos activePane = XLSX_PANE_BOTTOM_RIGHT);

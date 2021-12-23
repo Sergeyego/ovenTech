@@ -137,30 +137,6 @@ struct XlsxPrintOptions{
     bool verticalCentered;
 };
 
-struct XlsxPageMargins{
-    XlsxPageMargins(
-    double left=0.590277777777778,
-    double right=0.590277777777778,
-    double top=0.590277777777778,
-    double bottom=0.590277777777778,
-    double header=0.511805555555555,
-    double footer=0.511805555555555) :
-        left(left),
-        right(right),
-        top(top),
-        bottom(bottom),
-        header(header),
-        footer(footer){
-    }
-
-    double left;
-    double right;
-    double top;
-    double bottom;
-    double header;
-    double footer;
-};
-
 struct XlsxRowInfo
 {
     XlsxRowInfo(double height=0, const Format &format=Format(), bool hidden=false) :
@@ -193,16 +169,18 @@ struct XlsxBreaks
 
 struct XlsxHeaderFooter
 {
-    XlsxHeaderFooter(bool differentFirst=false, bool differentOddEven=false, QString oddHeader=QString(), QString oddFooter=QString()) :
-        differentFirst(false), differentOddEven(false), oddHeader(QString()), oddFooter(QString())
+    XlsxHeaderFooter(bool differentFirst=false, bool differentOddEven=false, bool scaleWithDoc=true, bool alignWithMargins=true) :
+        differentFirst(false), differentOddEven(false), scaleWithDoc(true), alignWithMargins(true)
     {
 
     }
 
     bool differentFirst;
     bool differentOddEven;
-    QString oddHeader;
-    QString oddFooter;
+    bool scaleWithDoc;
+    bool alignWithMargins;
+    QMap <XlsxHeaderFooterType, QString > HeaderData;
+    QMap <XlsxHeaderFooterType, QString > FooterData;
 };
 
 struct XlsxColumnInfo

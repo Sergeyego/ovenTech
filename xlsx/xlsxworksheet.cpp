@@ -422,6 +422,42 @@ void Worksheet::setPageSetup(const XlsxPageSetup &setup)
     d->pageSetup=setup;
 }
 
+void Worksheet::setHeaderData(const QString &data, XlsxHeaderFooterType type)
+{
+    Q_D(Worksheet);
+    d->headerFooter.HeaderData[type]=data;
+}
+
+void Worksheet::setFooterData(const QString &data, XlsxHeaderFooterType type)
+{
+    Q_D(Worksheet);
+    d->headerFooter.FooterData[type]=data;
+}
+
+QString Worksheet::headerData(XlsxHeaderFooterType type)
+{
+    Q_D(Worksheet);
+    return d->headerFooter.HeaderData.value(type);
+}
+
+QString Worksheet::footerData(XlsxHeaderFooterType type)
+{
+    Q_D(Worksheet);
+    return d->headerFooter.FooterData.value(type);
+}
+
+void Worksheet::setPageMargins(const XlsxPageMargins &pageMargins)
+{
+    Q_D(Worksheet);
+    d->pageMargins=pageMargins;
+}
+
+XlsxPageMargins Worksheet::pageMargins()
+{
+    Q_D(Worksheet);
+    return d->pageMargins;
+}
+
 /*!
  * Write \a value to cell (\a row, \a column) with the \a format.
  * Both \a row and \a column are all 1-indexed value.
@@ -731,7 +767,7 @@ bool Worksheet::writeNumeric(int row, int column, double value, const Format &fo
     Write \a formula to the cell \a row_column with the \a format and \a result.
     Returns true on success.
  */
-bool Worksheet::writeFormula(const CellReference &row_column, const CellFormula &formula, const Format &format, double result)
+bool Worksheet::writeFormula(const CellReference &row_column, const CellFormula &formula, const Format &format, QVariant result)
 {
     if (!row_column.isValid())
         return false;
@@ -743,7 +779,7 @@ bool Worksheet::writeFormula(const CellReference &row_column, const CellFormula 
     Write \a formula_ to the cell (\a row, \a column) with the \a format and \a result.
     Returns true on success.
 */
-bool Worksheet::writeFormula(int row, int column, const CellFormula &formula_, const Format &format, double result)
+bool Worksheet::writeFormula(int row, int column, const CellFormula &formula_, const Format &format, QVariant result)
 {
     Q_D(Worksheet);
     if (d->checkDimensions(row, column))
@@ -1470,7 +1506,7 @@ void WorksheetPrivate::saveXmlCellData(QXmlStreamWriter &writer, int row, int co
     } else if (cell->cellType() == Cell::NumberType){
         if (cell->hasFormula())
             cell->formula().saveToXml(writer);
-        if (cell->value().isValid()) {//note that, invalid value means 'v' is blank
+        if (!cell->value().isNull()) {//note that, invalid value means 'v' is blank
             double value = cell->value().toDouble();
             writer.writeTextElement(QStringLiteral("v"), QString::number(value, 'g', 15));
         }
@@ -1505,10 +1541,36 @@ void WorksheetPrivate::saveXmlMergeCells(QXmlStreamWriter &writer) const
 void WorksheetPrivate::saveXmlHeaderFooter(QXmlStreamWriter &writer) const
 {
     writer.writeStartElement(QStringLiteral("headerFooter"));
-    writer.writeAttribute(QStringLiteral("differentFirst"), headerFooter.differentFirst ? QStringLiteral("true") : QStringLiteral("false"));
     writer.writeAttribute(QStringLiteral("differentOddEven"), headerFooter.differentOddEven? QStringLiteral("true") : QStringLiteral("false"));
-    writer.writeTextElement(QStringLiteral("oddHeader"),headerFooter.oddHeader);
-    writer.writeTextElement(QStringLiteral("oddFooter"),headerFooter.oddFooter);
+    writer.writeAttribute(QStringLiteral("differentFirst"), headerFooter.differentFirst ? QStringLiteral("true") : QStringLiteral("false"));
+    if (!headerFooter.alignWithMargins){
+        writer.writeAttribute(QStringLiteral("alignWithMargins"), headerFooter.alignWithMargins? QStringLiteral("true") : QStringLiteral("false"));
+    }
+    if (!headerFooter.scaleWithDoc){
+        writer.writeAttribute(QStringLiteral("scaleWithDoc"), headerFooter.scaleWithDoc? QStringLiteral("true") : QStringLiteral("false"));
+    }
+
+    if (!headerFooter.HeaderData.value(HeaderFooterOdd).isEmpty()){
+        writer.writeTextElement(QStringLiteral("oddHeader"),headerFooter.HeaderData.value(HeaderFooterOdd));
+    }
+    if (!headerFooter.FooterData.value(HeaderFooterOdd).isEmpty()){
+        writer.writeTextElement(QStringLiteral("oddFooter"),headerFooter.FooterData.value(HeaderFooterOdd));
+    }
+
+    if (!headerFooter.HeaderData.value(HeaderFooterEven).isEmpty()){
+        writer.writeTextElement(QStringLiteral("evenHeader"),headerFooter.HeaderData.value(HeaderFooterEven));
+    }
+    if (!headerFooter.FooterData.value(HeaderFooterEven).isEmpty()){
+        writer.writeTextElement(QStringLiteral("evenFooter"),headerFooter.FooterData.value(HeaderFooterEven));
+    }
+
+    if (!headerFooter.HeaderData.value(HeaderFooterFirst).isEmpty()){
+        writer.writeTextElement(QStringLiteral("firstHeader"),headerFooter.HeaderData.value(HeaderFooterFirst));
+    }
+    if (!headerFooter.FooterData.value(HeaderFooterFirst).isEmpty()){
+        writer.writeTextElement(QStringLiteral("firstFooter"),headerFooter.FooterData.value(HeaderFooterFirst));
+    }
+
     writer.writeEndElement(); //headerFooter
 }
 
@@ -2841,14 +2903,23 @@ void WorksheetPrivate::loadXmlHeaderFooter(QXmlStreamReader &reader)
     QXmlStreamAttributes attributes = reader.attributes();
     headerFooter.differentFirst = parseXsdBoolean(attributes.value(QLatin1String("differentFirst")).toString());
     headerFooter.differentOddEven = parseXsdBoolean(attributes.value(QLatin1String("differentOddEven")).toString());
+    headerFooter.alignWithMargins = parseXsdBoolean(attributes.value(QLatin1String("alignWithMargins")).toString(),true);
+    headerFooter.scaleWithDoc = parseXsdBoolean(attributes.value(QLatin1String("scaleWithDoc")).toString(),true);
 
     while (!reader.atEnd() && !(reader.name() == QLatin1String("headerFooter") && reader.tokenType() == QXmlStreamReader::EndElement)) {
         if (reader.readNextStartElement()) {
             if (reader.name() == QLatin1String("oddHeader")) {
-                //qDebug()<<reader.readElementText();
-                headerFooter.oddHeader=reader.readElementText();
+                headerFooter.HeaderData.insert(HeaderFooterOdd,reader.readElementText());
             } else if (reader.name() == QLatin1String("oddFooter")) {
-                headerFooter.oddFooter=reader.readElementText();
+                headerFooter.FooterData.insert(HeaderFooterOdd,reader.readElementText());
+            }  else if (reader.name() == QLatin1String("evenHeader")) {
+                headerFooter.HeaderData.insert(HeaderFooterEven,reader.readElementText());
+            } else if (reader.name() == QLatin1String("evenFooter")) {
+                headerFooter.FooterData.insert(HeaderFooterEven,reader.readElementText());
+            } else if (reader.name() == QLatin1String("firstHeader")) {
+                headerFooter.HeaderData.insert(HeaderFooterFirst,reader.readElementText());
+            } else if (reader.name() == QLatin1String("firstFooter")) {
+                headerFooter.FooterData.insert(HeaderFooterFirst,reader.readElementText());
             }
         }
     }
